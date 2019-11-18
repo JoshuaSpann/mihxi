@@ -10,6 +10,8 @@ class Midi {
 		var midTrack = createTrackChunk();
 		var noteNum = MidiNoteLookup.getNoteAsInt('F#',4);
 		trace(noteNum, 0x36);
+		var noteFromInt = MidiNoteLookup.getNoteFromInt(0x54); //C7
+		trace(noteFromInt);
 	}
 	static function createChunk(headerBytes, chunkData) {
 		return headerBytes.concat(chunkData);
@@ -24,14 +26,14 @@ class Midi {
 				// 1 header & 1+ track chunks
 			// Format2: multi tracks polymelodic
 				// 1 header & 1+ track chunks
-		var midiHeaderBytes = [0x4d,0x54,0x68,0x64];
+		var MThd = [0x4d,0x54,0x68,0x64];
 		var midiHeaderDataBytes = [0x00,0x00,0x00,0x06,0x00,0x01,0x00,0x11,0x00,0x60];
-		return createChunk(midiHeaderBytes, midiHeaderDataBytes);
+		return createChunk(MThd, midiHeaderDataBytes);
 	}
 
 	static function createTrackChunk() {
-		var midiTrackHeader = [0x4d,0x54,0x72,0x68,0x00,0x00,0x00,0x4f,0x00];
+		var MTrk = [0x4d,0x54,0x72,0x68,0x00,0x00,0x00,0x4f,0x00];
 		var midiNotes = [0x90,0x48,0x50,0x60];
-		return createChunk(midiTrackHeader, midiNotes);
+		return createChunk(MTrk, midiNotes);
 	}
 }

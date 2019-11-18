@@ -1,5 +1,3 @@
-//import haxe.ds.Map;
-
 class MidiNoteLookup {
 	static private var _noteMapping: Map<String,Int> = [
 		'C'=>0x00, 'C#'=>0x01,
@@ -18,5 +16,16 @@ class MidiNoteLookup {
 		var noteInt = _noteMapping[note];
 		noteInt += octaveMult*12;
 		return noteInt;
+	}
+
+	public static function getNoteFromInt(noteNum:Int) {
+		for (key in _noteMapping.keys()) {
+			var value = _noteMapping[key];
+			for (octave in 0...10) {
+				var octaveMult = octave*12;
+				if (value+octaveMult == noteNum) return '$octave$key';
+			}
+		}
+		return 'X';
 	}
 }
