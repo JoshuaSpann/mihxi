@@ -5,14 +5,9 @@ import sys.io.File;
 class Midi {
 	static function main() {
 		var midHead = createHeaderChunk(1, 1, 60);
-		//var midiTriad = new MidiNoteData.newRawNotes(0x90, 0xc0, 0x50, 0x60);
 		var midTrk = new MidiNoteData('C', 'q');
-		trace(midHead, midTrk.notes());
+		trace(midHead, midTrk.rawNotes());
 		var midTrack = createTrackChunk();
-		var noteNum = MidiNoteLookup.getNoteAsInt('F#',4);
-		trace(noteNum, 0x36);
-		var noteFromInt = MidiNoteLookup.getNoteFromInt(0x54); //C7
-		trace(noteFromInt);
 	}
 	static function createChunk(headerBytes, chunkData) {
 		return headerBytes.concat(chunkData);
