@@ -12,6 +12,9 @@ class Midi {
 	static function createChunk(headerBytes, chunkData) {
 		return headerBytes.concat(chunkData);
 	}
+	static function createChunkEnd() {
+		return [0xff, 0x2f, 0x00];
+	}
 	static function createHeaderChunk(format, numberOfTracks, timing) {
 		// TYPE: 4byte ASCII
 		// LENGTH: 4bytes binary 32bit
