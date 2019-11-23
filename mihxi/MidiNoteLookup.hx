@@ -1,3 +1,5 @@
+package mihxi;
+
 class MidiNoteLookup {
 	static private var _noteMapping: Map<String,Int> = [
 		'C'=>0x00, 'C#'=>0x01,

@@ -1,4 +1,5 @@
-//package mihxi;
+package mihxi;
+
 class MidiNoteData {
 	var _noteTick:Int = 0x60;
 	var _notes:Array<Map<String,Dynamic>> = [];
@@ -7,7 +8,8 @@ class MidiNoteData {
 	/**
 	 * Declaraion is kind enough to allow new note data to be added
 	 **/
-	public inline function new(note:String, length:String='q', octave:Int=4, velocity:Int=90) {
+	public inline function new(note:String=null, length:String='q', octave:Int=4, velocity:Int=90) {
+		if (note == null) return;
 		add(note,length,octave,velocity);
 	}
 
@@ -49,25 +51,22 @@ class MidiNoteData {
 			var noteLenNum = getMidiLengthFromAlias(noteLen);
 			var restLenNum = 0;
 
-			if (note['note'] == 'r') {
+			if (note['note'].toLowerCase() == 'r') {
 				note_i++;
 				continue;
 			}
 
 			if (note_i+1 < _notes.length) nextNote = _notes[note_i];
-			if (nextNote['note'] == 'r') {
+			if (nextNote['note'].toLowerCase() == 'r') {
 				// Pull last note's bytes
 				// Change last byte length to equal rest
-trace(nextNote);
 				restLenNum = getMidiLengthFromAlias(nextNote['length']);
 			}
-			if (note['note'] != 'r') {
-				noteNum = MidiNoteLookup.getNoteAsInt(note['note'], note['octave']);
-				rawNoteData.push(0x90);
-				rawNoteData.push(noteNum);
-				rawNoteData.push(noteVelocity);
-				rawNoteData.push(noteLenNum);
-			}
+			noteNum = MidiNoteLookup.getNoteAsInt(note['note'], note['octave']);
+			rawNoteData.push(0x90);
+			rawNoteData.push(noteNum);
+			rawNoteData.push(noteVelocity);
+			rawNoteData.push(noteLenNum);
 			rawNoteData.push(0x80);
 			rawNoteData.push(noteNum);
 			rawNoteData.push(noteVelocity);
