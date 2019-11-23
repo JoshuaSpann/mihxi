@@ -18,30 +18,34 @@ class MidiNoteData {
 	 * Note is valid note name, length is 1-letter alias for note type,
 	 *   velocity is percentage-based value.
 	 **/
-	public function add(note:String, length:String='q', octave:Int=4, velocity:Int=90) {
+	public function add(note:String, length:String='q', octave:Int=4, velocity:Int=90, isHarmony:Bool=false) {
 		var noteMap: Map<String,Dynamic> = [
 			'note'=>note,
 			'octave'=>octave,
 			'velocity'=>velocity,
-			'length'=>length
+			'length'=>length,
+			'isHarmony'=>isHarmony
 		];
 		_notes.push(noteMap);
+	}
+	public function push(note:String, length:String='q', octave:Int=4, velocity:Int=90, isHarmony:Bool=false) {
+		add(note,length,octave,velocity,isHarmony);
 	}
 
 	/**
 	 * Function-based getter/setter for high-level notes representation
 	 **/
-	public function notes() {
+	public function notes(newNotes:Array<Map<String,Dynamic>>=null) {
+		if (newNotes != null) _notes = newNotes;
 		return _notes;
 	}
 
 	/**
-	 * Parses high-level note data into single MIDI byte-data array
+	 * Parses high-level note data into single MIDI byte-data array on-the-fly
 	 **/
 	public function rawNotes() {
 		var rawNoteData:Array<Int> = [];
 		var note_i = 1;
-		var lastNote = _notes[0];
 
 		for (note in _notes) {
 			var noteNum = 0;
@@ -51,18 +55,25 @@ class MidiNoteData {
 			var noteLenNum = getMidiLengthFromAlias(noteLen);
 			var restLenNum = 0;
 
+			if (note_i+1 < _notes.length) nextNote = _notes[note_i];
+
 			if (note['note'].toLowerCase() == 'r') {
 				note_i++;
 				continue;
 			}
 
-			if (note_i+1 < _notes.length) nextNote = _notes[note_i];
+			// Allow polyphony //
+			if (nextNote['isHarmony'] == true) {
+				noteLenNum = 0;
+			}
+
+			// Pull last note's bytes & change last byte length to equal the rest length //
 			if (nextNote['note'].toLowerCase() == 'r') {
-				// Pull last note's bytes
-				// Change last byte length to equal rest
 				restLenNum = getMidiLengthFromAlias(nextNote['length']);
 			}
+
 			noteNum = MidiNoteLookup.getNoteAsInt(note['note'], note['octave']);
+
 			rawNoteData.push(0x90);
 			rawNoteData.push(noteNum);
 			rawNoteData.push(noteVelocity);
@@ -70,10 +81,10 @@ class MidiNoteData {
 			rawNoteData.push(0x80);
 			rawNoteData.push(noteNum);
 			rawNoteData.push(noteVelocity);
-			// This check is needed because the extra 0 creates invalid MIDI data with unexpected EOF for common programs
+
+			// This check is needed because the extra 0 creates invalid MIDI data with unexpected EOF for some programs
 			if (note_i < _notes.length) rawNoteData.push(restLenNum);
 			note_i++;
-			lastNote = note;
 		}
 
 		return rawNoteData;

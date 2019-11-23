@@ -6,12 +6,26 @@ import haxe.io.UInt8Array;
 
 class Example {
 	static function main() {
+		// Use this to set the note at the same start as the previous note //
+		var isHarmony = true;
+		var octave = 6;
+
 		// Can instance with initial args if desired like below //
-		var midTrk = new MidiNoteData('C', 'q', 6);
+		/* Available args:
+		 *    note: case-insensitive note name, or r for rest
+		 *    length: w(hole) h(alf) e(ighth) s(ixteenth) t(riplet)
+		 *    octave: int octave for note
+		 *    velocity: percent velocity/attack
+		 *    isHarmony: if should be played as harmony/chord with last note
+		 **/
+		var midTrk = new MidiNoteData('C', 'q', octave);
+		midTrk.add('E','q', octave, isHarmony);
 		midTrk.add('R','q');
-		midTrk.add('G#','q', 6);
-		midTrk.add('r','s');
-		midTrk.add('A','q', 5);
+		midTrk.add('F','e', octave);
+		midTrk.add('b','e', octave, isHarmony);
+		midTrk.add('g','e', octave);
+		// TODO - Not having this extra note glitches the polyphony
+		midTrk.add('c','q', octave);
 
 		// A cheap workaround to get the MIDI file's Bytes to write from the int array //
 		var midiData = MidiData.createMidiFile(midTrk);

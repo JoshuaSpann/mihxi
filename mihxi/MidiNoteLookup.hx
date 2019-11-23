@@ -15,7 +15,7 @@ class MidiNoteLookup {
 		var octaveMult = octave;
 		if (octave < 0) octaveMult = 0;
 
-		var noteInt = _noteMapping[note];
+		var noteInt = _noteMapping[note.toUpperCase()];
 		noteInt += octaveMult*12;
 		return noteInt;
 	}
