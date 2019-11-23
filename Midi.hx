@@ -1,13 +1,27 @@
 //package mihxi;
 import haxe.io.Bytes;
 import sys.io.File;
+import haxe.io.UInt8Array;
 
 class Midi {
 	static function main() {
+		var midTrk = new MidiNoteData('C', 'q', 6);
+		midTrk.add('r','q');
+		midTrk.add('G#','q', 6);
+		midTrk.add('r','s');
+		midTrk.add('A','q', 5);
+		var midiData = createMidiFile(midTrk);
+		var midBytes = UInt8Array.fromArray(midiData).view.buffer;
+		trace(midiData, midBytes.toHex());
+		File.saveBytes('prg.mid', midBytes); 
+	}
+	static function createMidiFile(midiNotes) {
 		var midHead = createHeaderChunk(1, 1, 60);
-		var midTrk = new MidiNoteData('C', 'q');
-		trace(midHead, midTrk.rawNotes());
-		var midTrack = createTrackChunk();
+		var midiData = midHead;
+		midiData = midiData.concat(createTrackChunk(midiNotes.rawNotes()));
+		midiData = midiData.concat(createChunkEnd());
+		midiData = midiData.concat(createChunkEnd());
+		return midiData;
 	}
 	static function createChunk(headerBytes, chunkData) {
 		return headerBytes.concat(chunkData);
@@ -30,9 +44,8 @@ class Midi {
 		return createChunk(MThd, midiHeaderDataBytes);
 	}
 
-	static function createTrackChunk() {
-		var MTrk = [0x4d,0x54,0x72,0x68,0x00,0x00,0x00,0x4f,0x00];
-		var midiNotes = [0x90,0x48,0x50,0x60];
+	static function createTrackChunk(midiNotes) {
+		var MTrk = [0x4d,0x54,0x72,0x6b,0x00,0x00,0x00,0x4f,0x00];
 		return createChunk(MTrk, midiNotes);
 	}
 }

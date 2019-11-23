@@ -38,21 +38,43 @@ class MidiNoteData {
 	 **/
 	public function rawNotes() {
 		var rawNoteData:Array<Int> = [];
+		var note_i = 1;
+		var lastNote = _notes[0];
 
 		for (note in _notes) {
-			var noteNum = MidiNoteLookup.getNoteAsInt(note['note'], note['octave']);
+			var noteNum = 0;
+			var nextNote = _notes[note_i-1];
 			var noteVelocity = getMidiVelocityFromPercent(note['velocity']);
 			var noteLen = note['length'];
 			var noteLenNum = getMidiLengthFromAlias(noteLen);
+			var restLenNum = 0;
 
-			rawNoteData.push(0x90);
-			rawNoteData.push(noteNum);
-			rawNoteData.push(noteVelocity);
-			rawNoteData.push(noteLenNum);
+			if (note['note'] == 'r') {
+				note_i++;
+				continue;
+			}
+
+			if (note_i+1 < _notes.length) nextNote = _notes[note_i];
+			if (nextNote['note'] == 'r') {
+				// Pull last note's bytes
+				// Change last byte length to equal rest
+trace(nextNote);
+				restLenNum = getMidiLengthFromAlias(nextNote['length']);
+			}
+			if (note['note'] != 'r') {
+				noteNum = MidiNoteLookup.getNoteAsInt(note['note'], note['octave']);
+				rawNoteData.push(0x90);
+				rawNoteData.push(noteNum);
+				rawNoteData.push(noteVelocity);
+				rawNoteData.push(noteLenNum);
+			}
 			rawNoteData.push(0x80);
 			rawNoteData.push(noteNum);
 			rawNoteData.push(noteVelocity);
-			rawNoteData.push(0);
+			// This check is needed because the extra 0 creates invalid MIDI data with unexpected EOF for common programs
+			if (note_i < _notes.length) rawNoteData.push(restLenNum);
+			note_i++;
+			lastNote = note;
 		}
 
 		return rawNoteData;
@@ -70,6 +92,8 @@ class MidiNoteData {
 				lengthNum = _noteTick * 2;
 			case 'q':
 				lengthNum = _noteTick * 1;
+			case 't':
+				lengthNum = Std.int(_noteTick / 3);
 			case 'e':
 				lengthNum = Std.int(_noteTick / 2);
 			case 's':
