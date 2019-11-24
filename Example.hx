@@ -23,9 +23,7 @@ class Example {
 		midTrk.add('R','q');
 		midTrk.add('F','e', octave);
 		midTrk.add('b','e', octave, isHarmony);
-		midTrk.add('g','e', octave);
-		// TODO - Not having this extra note glitches the polyphony
-		midTrk.add('c','q', octave);
+		midTrk.add('g','e', octave,isHarmony);
 
 		// A cheap workaround to get the MIDI file's Bytes to write from the int array //
 		var midiFile = new MidiData();

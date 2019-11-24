@@ -4,30 +4,42 @@ class MidiData {
 	public var timeSignature:String = 'c';
 	public var key:String = 'C';
 	public var tempo:Int = 120;
+	var deltaTime = 0x00;
 
 	public inline function new() {
 	}
 
 	public function createMidiFile(midiNotes) {
-		var midHead = createHeaderChunk(1, 1, 60);
+		var midHead = createHeaderChunk(1, 1, 0x60);
 		var midiData = midHead;
 		var midTimeSig = setTimeSignature(this.timeSignature);
 		var midKeySig = setKeySignature(this.key);
 		var midInst = setInstrument('piano', 0);
 		var midTempo = setTempo(this.tempo);
+		var midPort = [deltaTime, 0xff,0x21,0x01,0x00];
+		var xBytes = [
+			deltaTime, 0xb0,0x79,0x00
+		];
+		var xBytes2 = [
+			deltaTime, 0xb0,0x07,0x64,0x00,0x0a,0x40, 
+			0x00,0x5b,0x00, 
+			0x00,0x5d,0x00
+		];
 
 		var midTrackBody = [];
 		//midTrackBody = midTrackBody.concat(midTimeSig);
-		//midTrackBody = midTrackBody.concat(midKeySig);
+		midTrackBody = midTrackBody.concat(midKeySig);
 		//midTrackBody = midTrackBody.concat(midTempo);
+		//midTrackBody = midTrackBody.concat(xBytes);
 		//midTrackBody = midTrackBody.concat(midInst);
+		//midTrackBody = midTrackBody.concat(xBytes2);
+		//midTrackBody = midTrackBody.concat(midPort);
 		midTrackBody = midTrackBody.concat(midiNotes.rawNotes());
 
 		var midTrack = createTrackChunk(midTrackBody);
 
 		midiData = midiData.concat(midTrack);
-		midiData = midiData.concat(createChunkEnd());
-		midiData = midiData.concat(createChunkEnd());
+
 		return midiData;
 	}
 	function setInstrument(instrument, channel) {
@@ -41,9 +53,7 @@ class MidiData {
 			instrumentCode = 0x00;
 		}
 
-		var midiInstrument = [];
-		midiInstrument.push(channelCode);
-		midiInstrument.push(instrumentCode);
+		var midiInstrument = [deltaTime, channelCode, instrumentCode];
 
 		return midiInstrument;
 	}
@@ -149,7 +159,7 @@ class MidiData {
 				isMinor = false;
 		}
 
-		var midiKeySigEvent = [0xff, 0x59, 0x02];
+		var midiKeySigEvent = [deltaTime, 0xff, 0x59, 0x02];
 		var flatsSharps = 0;
 		var majorMinor = 0;
 
@@ -163,9 +173,9 @@ class MidiData {
 		return midiKeySigEvent;
 	}
 	function setTempo(tempoBPM:Int=120) {
-		var midiTempoFlag = [0xff, 0x51, 0x03];
+		var midiTempoFlag = [deltaTime, 0xff, 0x51, 0x03];
 		// TODO
-		midiTempoFlag = midiTempoFlag.concat([0x50,0x00,0x00]);
+		midiTempoFlag = midiTempoFlag.concat([0x07,0xa1,0x20]);
 		return midiTempoFlag;
 	}
 	function setTimeSignature(timeSig:String='4/4') {
@@ -174,10 +184,10 @@ class MidiData {
 
 		var numerator = Std.parseInt( timeSig.split('/')[0] );
 		var denominator = Std.parseInt( timeSig.split('/')[1] );
-		var midClocksPerMetronomeTick = 0x18;
+		var midClocksPerMetronomeTick = 0x24;
 		var thirtysecondNotesPer24MidClockTicks = 0x08;
 
-		var midiTimeSigEvent = [0xff, 0x58, 0x04];
+		var midiTimeSigEvent = [deltaTime, 0xff, 0x58, 0x04];
 		midiTimeSigEvent.push(numerator);
 		midiTimeSigEvent.push(Std.int(denominator/2));
 		midiTimeSigEvent.push(midClocksPerMetronomeTick);
@@ -189,24 +199,34 @@ class MidiData {
 		return headerBytes.concat(chunkData);
 	}
 	function createChunkEnd() {
-		return [0xff, 0x2f, 0x00];
+		return [0x00, 0xff, 0x2f, 0x00];
 	}
 	function createHeaderChunk(format, numberOfTracks, timing) {
-		// TYPE: 4byte ASCII
-		// LENGTH: 4bytes binary 32bit
-		// DATA: 6bytes (16bit format, 16bit tracks, 16bit division)
-			// Format0: single track
-				// 1 header & 1 track chunk
-			// Format1: multi tracks monomelodic (unison)
-				// 1 header & 1+ track chunks
-			// Format2: multi tracks polymelodic
-				// 1 header & 1+ track chunks
+		// Format0: single track
+			// 1 header & 1 track chunk
+		// Format1: multi tracks monomelodic (unison)
+			// 1 header & 1+ track chunks
+		// Format2: multi tracks polymelodic
+			// 1 header & 1+ track chunks
 		var MThd = [0x4d,0x54,0x68,0x64];
-		var midiHeaderDataBytes = [0x00,0x00,0x00,0x06,0x00,0x01,0x00,0x11,0x00,0x60];
+		var chunkLen = [0,0,0,0x06];
+		var midiFormat = [0x00,0x01];
+		var totalTracks = [0x00,0x01];
+		var ticksPerQuarterNote = [0x00,0x60];
+
+		var midiHeaderDataBytes = [].concat(chunkLen);
+		midiHeaderDataBytes = midiHeaderDataBytes.concat(midiFormat);
+		midiHeaderDataBytes = midiHeaderDataBytes.concat(totalTracks);
+		midiHeaderDataBytes = midiHeaderDataBytes.concat(ticksPerQuarterNote);
+
 		return createChunk(MThd, midiHeaderDataBytes);
 	}
-	function createTrackChunk(midiNotes) {
-		var MTrk = [0x4d,0x54,0x72,0x6b,0x00,0x00,0x00,0x4f,0x00];
-		return createChunk(MTrk, midiNotes);
+	function createTrackChunk(midiNotes:Array<Int>) {
+		var trackEnd = [deltaTime, 0xff,0x2f,0x00];
+		var trackLen = midiNotes.length + trackEnd.length;
+		var MTrk = [0x4d,0x54,0x72,0x6b,0x00,0x00,0x00,trackLen];
+		var trackChunk = createChunk(MTrk, midiNotes);
+		trackChunk = trackChunk.concat(trackEnd);
+		return trackChunk;
 	}
 }

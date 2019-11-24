@@ -3,7 +3,7 @@ package mihxi;
 class MidiNoteData {
 	var _noteTick:Int = 0x60;
 	var _notes:Array<Map<String,Dynamic>> = [];
-	var _notesRaw:Array<Array<Int>> = [[0x90,0x48,0x50,0x60, 0x80,0x48,0x50,0x60]];
+	var _deltaTime:Int = 0x00;
 
 	/**
 	 * Declaraion is kind enough to allow new note data to be added
@@ -45,17 +45,22 @@ class MidiNoteData {
 	 **/
 	public function rawNotes() {
 		var rawNoteData:Array<Int> = [];
-		var note_i = 1;
+		var shutoffNotes:Array<Int> = [];
+		var note_i = 0;
 
 		for (note in _notes) {
 			var noteNum = 0;
-			var nextNote = _notes[note_i-1];
+			var lastNote = null;
+			var nextNote = null;
 			var noteVelocity = getMidiVelocityFromPercent(note['velocity']);
 			var noteLen = note['length'];
 			var noteLenNum = getMidiLengthFromAlias(noteLen);
 			var restLenNum = 0;
+			var deltaTime = _deltaTime;
 
-			if (note_i+1 < _notes.length) nextNote = _notes[note_i];
+			if (note_i > 0) lastNote = _notes[note_i-1];
+
+			if (note_i < _notes.length) nextNote = _notes[note_i+1];
 
 			if (note['note'].toLowerCase() == 'r') {
 				note_i++;
@@ -63,27 +68,32 @@ class MidiNoteData {
 			}
 
 			// Allow polyphony //
-			if (nextNote['isHarmony'] == true) {
+			if (
+				(note_i == _notes.length-1 && note['isHarmony'] == true)
+				|| (nextNote != null && nextNote['isHarmony'] == true)
+			){
 				noteLenNum = 0;
 			}
 
 			// Pull last note's bytes & change last byte length to equal the rest length //
-			if (nextNote['note'].toLowerCase() == 'r') {
-				restLenNum = getMidiLengthFromAlias(nextNote['length']);
+			if (lastNote != null && lastNote['note'].toLowerCase() == 'r') {
+				restLenNum = getMidiLengthFromAlias(lastNote['length']);
 			}
 
 			noteNum = MidiNoteLookup.getNoteAsInt(note['note'], note['octave']);
 
+			// Note On Event //
+			rawNoteData.push(deltaTime+restLenNum);
 			rawNoteData.push(0x90);
 			rawNoteData.push(noteNum);
 			rawNoteData.push(noteVelocity);
+
+			// Note Off Event //
 			rawNoteData.push(noteLenNum);
 			rawNoteData.push(0x80);
 			rawNoteData.push(noteNum);
 			rawNoteData.push(noteVelocity);
 
-			// This check is needed because the extra 0 creates invalid MIDI data with unexpected EOF for some programs
-			if (note_i < _notes.length) rawNoteData.push(restLenNum);
 			note_i++;
 		}
 
