@@ -28,7 +28,8 @@ class Example {
 		midTrk.add('c','q', octave);
 
 		// A cheap workaround to get the MIDI file's Bytes to write from the int array //
-		var midiData = MidiData.createMidiFile(midTrk);
+		var midiFile = new MidiData();
+		var midiData = midiFile.createMidiFile(midTrk);
 		var midBytes = UInt8Array.fromArray(midiData).view.buffer;
 
 		trace(midiData, midBytes.toHex());
