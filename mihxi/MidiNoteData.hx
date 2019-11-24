@@ -104,6 +104,20 @@ class MidiNoteData {
 	 * Parses length alias to MIDI byte value
 	 **/
 	function getMidiLengthFromAlias(alias:String) {
+		var lengthNum = getNoteTicks(alias);
+		if (alias.length > 1) {
+			if (alias.charAt(0) == 't') {
+				lengthNum = getNoteTicks(alias.charAt(1));
+				lengthNum = Std.int(lengthNum/3);
+			}
+			else if(alias.charAt(1) == 't') {
+				lengthNum = getNoteTicks(alias.charAt(0));
+				lengthNum = Std.int(lengthNum/3);
+			}
+		}
+		return lengthNum;
+	}
+	function getNoteTicks(alias:String) {
 		var lengthNum = _noteTick;
 		switch (alias) {
 			case 'w':

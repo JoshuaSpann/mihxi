@@ -19,11 +19,29 @@ class Example {
 		 *    isHarmony: if should be played as harmony/chord with last note
 		 **/
 		var midTrk = new MidiNoteData('C', 'q', octave);
-		midTrk.add('E','q', octave, isHarmony);
+
+		// Basic triplets
+		midTrk.add('c','t', octave);
+		midTrk.add('d','t', octave);
+		midTrk.add('E','t', octave);
+		midTrk.add('r','e');
+
+		// Eigth-note triplets (fits in eigth-note len)
+		midTrk.add('F','et', octave);
+		midTrk.add('a','et', octave);
+		midTrk.add('e','te', octave);
+
 		midTrk.add('R','q');
-		midTrk.add('F','e', octave);
-		midTrk.add('b','e', octave, isHarmony);
-		midTrk.add('g','e', octave,isHarmony);
+
+		// Half-note triplets (fits in half note len)
+		midTrk.add('F','ht', octave);
+		midTrk.add('a','ht', octave);
+		midTrk.add('e','ht', octave);
+
+		// Glitchy here where the length is ignored for the triplet note len
+		midTrk.add('e','h', octave);
+		midTrk.add('b','h', octave, isHarmony);
+		midTrk.add('g','h', octave,isHarmony);
 
 		// A cheap workaround to get the MIDI file's Bytes to write from the int array //
 		var midiFile = new MidiData();

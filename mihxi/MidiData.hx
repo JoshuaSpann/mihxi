@@ -27,11 +27,11 @@ class MidiData {
 		];
 
 		var midTrackBody = [];
-		//midTrackBody = midTrackBody.concat(midTimeSig);
+		midTrackBody = midTrackBody.concat(midTimeSig);
 		midTrackBody = midTrackBody.concat(midKeySig);
-		//midTrackBody = midTrackBody.concat(midTempo);
+		midTrackBody = midTrackBody.concat(midTempo);
 		//midTrackBody = midTrackBody.concat(xBytes);
-		//midTrackBody = midTrackBody.concat(midInst);
+		midTrackBody = midTrackBody.concat(midInst);
 		//midTrackBody = midTrackBody.concat(xBytes2);
 		//midTrackBody = midTrackBody.concat(midPort);
 		midTrackBody = midTrackBody.concat(midiNotes.rawNotes());
