@@ -19,6 +19,8 @@ class Example {
 		 *    isHarmony: if should be played as harmony/chord with last note
 		 **/
 		var midTrk = new MidiNoteData('C', 'q', octave);
+		midTrk = new MidiNoteData('C', 'q.', octave);
+		//midTrk.add('r','e');
 
 		// Basic triplets
 		midTrk.add('c','t', octave);

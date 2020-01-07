@@ -114,6 +114,10 @@ class MidiNoteData {
 				lengthNum = getNoteTicks(alias.charAt(0));
 				lengthNum = Std.int(lengthNum/3);
 			}
+			else if(alias.charAt(1) == '.') {
+				lengthNum = getNoteTicks(alias.charAt(0));
+				//TODO - lengthNum = lengthNum + Std.int(lengthNum/2);
+			}
 		}
 		return lengthNum;
 	}

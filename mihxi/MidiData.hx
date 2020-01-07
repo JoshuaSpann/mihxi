@@ -1,4 +1,6 @@
 package mihxi;
+import haxe.io.Bytes;
+import haxe.crypto.BaseCode;
 
 class MidiData {
 	public var timeSignature:String = 'c';
@@ -9,12 +11,12 @@ class MidiData {
 	public inline function new() {
 	}
 
-	public function createMidiFile(midiNotes) {
-		var midHead = createHeaderChunk(1, 1, 0x60);
+	public function createMidiFile(midiNotes,format:Int=1,tracks:Int=1) {
+		var midHead = createHeaderChunk(format, tracks, 0x60);
 		var midiData = midHead;
 		var midTimeSig = setTimeSignature(this.timeSignature);
 		var midKeySig = setKeySignature(this.key);
-		var midInst = setInstrument('piano', 0);
+		var midInst = setInstrument('piano', 2);
 		var midTempo = setTempo(this.tempo);
 		var midPort = [deltaTime, 0xff,0x21,0x01,0x00];
 		var xBytes = [
@@ -37,8 +39,11 @@ class MidiData {
 		midTrackBody = midTrackBody.concat(midiNotes.rawNotes());
 
 		var midTrack = createTrackChunk(midTrackBody);
+		var midTrack2 = createTrackChunk(midiNotes.rawNotes());
 
 		midiData = midiData.concat(midTrack);
+		//midiData = midiData.concat(midTrack2);
+		midiData = midiData.concat(createChunkEnd());
 
 		return midiData;
 	}
@@ -199,7 +204,7 @@ class MidiData {
 		return headerBytes.concat(chunkData);
 	}
 	function createChunkEnd() {
-		return [0x00, 0xff, 0x2f, 0x00];
+		return [deltaTime, 0xff,0x2f,0x00];
 	}
 	function createHeaderChunk(format, numberOfTracks, timing) {
 		// Format0: single track
@@ -210,7 +215,7 @@ class MidiData {
 			// 1 header & 1+ track chunks
 		var MThd = [0x4d,0x54,0x68,0x64];
 		var chunkLen = [0,0,0,0x06];
-		var midiFormat = [0x00,0x01];
+		var midiFormat = [0x00,format];
 		var totalTracks = [0x00,0x01];
 		var ticksPerQuarterNote = [0x00,0x60];
 
@@ -224,9 +229,32 @@ class MidiData {
 	function createTrackChunk(midiNotes:Array<Int>) {
 		var trackEnd = [deltaTime, 0xff,0x2f,0x00];
 		var trackLen = midiNotes.length + trackEnd.length;
-		var MTrk = [0x4d,0x54,0x72,0x6b,0x00,0x00,0x00,trackLen];
+		var MTrk = [0x4d,0x54,0x72,0x6b];
+		var trackLenBytes = [0x00,0x00,0x00,trackLen];
+		var trackLenStr = StringTools.hex(trackLen,8);
+
+//TODO - get chars in sets of 2, convert to int for array. Cleaner than loop hacks
+		trackLenBytes = [
+			Std.parseInt('0x'+trackLenStr.substr(0,2)),
+			Std.parseInt('0x'+trackLenStr.substr(2,2)),
+			Std.parseInt('0x'+trackLenStr.substr(4,2)),
+			Std.parseInt('0x'+trackLenStr.substr(6,2)),
+		];
+trace('LengthBytes: $trackLenBytes');
+/*
+		if (trackLen > 0xff) {
+			//trace(trackLen);
+trace(StringTools.hex(trackLen));
+			trackLenBytes = [0x00,0x00,0x01,trackLen];
+			//trackLenBytes = [0x00,0x00,trackLen];
+		}
+		if (trackLen > 0xffff) trackLenBytes = [0x00,trackLen];
+		if (trackLen > 0xffff) trackLenBytes = [0x00,trackLen];
+		if (trackLen > 0xffffff) trackLenBytes = [trackLen];
+*/
+		MTrk = MTrk.concat(trackLenBytes);
 		var trackChunk = createChunk(MTrk, midiNotes);
-		trackChunk = trackChunk.concat(trackEnd);
+		//trackChunk = trackChunk.concat(trackEnd);
 		return trackChunk;
 	}
 }
